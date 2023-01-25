@@ -1,40 +1,52 @@
 // Put all your frontend code here.
+const socket = io();
+const changeNickBox = document.querySelector("#changeNickBox");
 const messageList = document.querySelector(".toast-body");
 const messageForm = document.querySelector("#message");
-const socket = new WebSocket(`wss://${window.location.host}`);
-const nickname = prompt("당신의 닉네임은?");
+const roomName = document.querySelector("#roomName");
+let nickname = "Anonymous";
+let roomNum;
 
-function makeMessage(type, payload) {
-  const msg = { type, payload };
-  return JSON.stringify(msg);
+/**
+ * 방 입장
+ */
+function enterRoom() {
+  roomNum = prompt("what your room number?");
+  socket.emit("enter_room", roomNum, () => {
+    alert(`${roomNum}에 입장 하였습니다.`);
+    roomName.innerText = `Zoom Room ${roomNum}`;
+  });
 }
 
-function handleOpen() {
-  console.log("Connected to Server ✅");
+enterRoom();
+
+/**
+ * 닉네임 변경
+ */
+function changeNickname() {
+  const changedName = changeNickBox.querySelector("input").value;
+  nickname = changedName;
+  socket.emit("change_nick", nickname, () => alert(`닉네임 변경: ${nickname}`));
 }
 
-socket.addEventListener("open", handleOpen);
+changeNickBox.querySelector("button").addEventListener("click", changeNickname);
 
-socket.addEventListener("message", (message) => {
-  const div = document.createElement("div");
-  div.innerText = message.data;
-  messageList.append(div);
-});
-
-socket.addEventListener("close", () => {
-  console.log("Disconnected from Server ❌");
-});
-
-function handleSubmit(event) {
+/**
+ * 메시지 보내기
+ */
+function sendMessage(event) {
   event.preventDefault();
-  const input = messageForm.querySelector("input");
-  socket.send(makeMessage("nickname", nickname));
-  socket.send(makeMessage("new_message", input.value));
-  input.value = "";
+  inputValue = messageForm.querySelector("input").value;
+  socket.emit("new_message", inputValue, roomNum, addMessage);
 }
 
-messageForm.addEventListener("submit", handleSubmit);
+function addMessage(message) {
+  const div = document.createElement("div");
+  div.innerText = message;
+  messageList.append(div);
+}
 
+messageForm.addEventListener("submit", sendMessage);
 /**
  * sleep
  */
@@ -54,3 +66,10 @@ if (toastTrigger) {
     toast.show();
   });
 }
+
+/**
+ * 누군가의 메시지
+ */
+socket.on("new_message", (message) => {
+  addMessage(message);
+});

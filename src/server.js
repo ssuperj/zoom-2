@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 const app = express();
@@ -11,33 +11,27 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (_, res) => res.render("home.html"));
 app.get("/*", (_, res) => res.redirect("/"));
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const httpServer = http.createServer(app);
+const wsServer = SocketIO(httpServer);
 
-// Put all your backend code here.
-
-function onSocketClose() {
-  console.log("Disconnected from the Browser ❌");
-}
-const sockets = [];
-
-wss.on("connection", (socket) => {
-  sockets.push(socket);
-  socket["nickname"] = "Anon";
-  console.log("Connected to Browser ✅");
-  socket.on("close", onSocketClose);
-  socket.on("message", (msg) => {
-    const message = JSON.parse(msg);
-    switch (message.type) {
-      case "new_message":
-        sockets.forEach((aSocket) =>
-          aSocket.send(`${socket.nickname}: ${message.payload}`)
-        );
-      case "nickname":
-        socket["nickname"] = message.payload;
-    }
+wsServer.on("connection", (socket) => {
+  socket["nickname"] = "Anonymous";
+  socket.onAny((event) => {
+    console.log(`Socket Event: ${event}`);
+  });
+  socket.on("enter_room", (roomNum, done) => {
+    socket.join(roomNum);
+    done();
+  });
+  socket.on("change_nick", (nickname, done) => {
+    socket["nickname"] = nickname;
+    done();
+  });
+  socket.on("new_message", (message, roomNum, done) => {
+    socket.to(roomNum).emit("new_message", `${socket.nickname}: ${message}`);
+    done(`You: ${message}`);
   });
 });
 
-server.listen(process.env.PORT);
-// server.listen(3000);
+// server.listen(process.env.PORT);
+httpServer.listen(3000);

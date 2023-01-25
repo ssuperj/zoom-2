@@ -23,33 +23,31 @@
   </head>
   <body>
     <header class="d-flex justify-content-center">
-      <h1 class="m-5">Zoom</h1>
+      <h1 class="m-5" id="roomName">Zoom</h1>
     </header>
-    <main>
-      <div class="m-5 container d-flex justify-content-center">
+    <main class="container justify-content-center">
+      <div class="container d-flex justify-content-center" id="changeNickBox">
+        <input type="text" placeholder="write your name" required />
+        <button type="button" class="btn btn-info">닉네임 변경</button>
+      </div>
+      <div class="container mt-5 mb-5 d-flex justify-content-center">
         <form id="message">
           <input type="text" placeholder="write a msg" required />
-          <button type="submit" class="btn btn-primary" id="liveToastBtn">
-            Send
-          </button>
+          <button type="submit" class="btn btn-primary" id="liveToastBtn">Send</button>
         </form>
       </div>
       <div class="container d-flex justify-content-center">
-        <div
-          id="liveToast"
-          class="toast show"
-          role="alert"
-          aria-live="assertive"
-        >
+        <div id="liveToast" class="toast show" role="alert" aria-live="assertive">
           <div class="toast-header">
             <strong class="me-auto">Zoom</strong>
-            <small>11 mins ago</small>
+            <small>1 mins ago</small>
             <button type="button" class="btn-close"></button>
           </div>
           <div class="toast-body"></div>
         </div>
       </div>
     </main>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/public/app.js"></script>
   </body>
 </html>
