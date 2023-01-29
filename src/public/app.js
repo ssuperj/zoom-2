@@ -63,27 +63,39 @@ async function getMedia(deviceId) {
   }
 }
 
+/**
+ * 음소거
+ */
+
 function handleMuteClick() {
   myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
   if (!muted) {
-    muteBtn.innerText = "Unmute";
+    muteBtn.innerText = "음소거 해제";
     muted = true;
   } else {
-    muteBtn.innerText = "Mute";
+    muteBtn.innerText = "음소거";
     muted = false;
   }
 }
 
+/**
+ * 카메라 온오프
+ */
+
 function handleCameraClick() {
   myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
   if (cameraOff) {
-    cameraBtn.innerText = "Turn Camera Off";
+    cameraBtn.innerText = "카메라 끄기";
     cameraOff = false;
   } else {
-    cameraBtn.innerText = "Turn Camera On";
+    cameraBtn.innerText = "카메라 켜기";
     cameraOff = true;
   }
 }
+
+/**
+ * 카메라 체인지
+ */
 
 async function handleCameraChange() {
   await getMedia(camerasSelect.value);
@@ -98,11 +110,12 @@ muteBtn.addEventListener("click", handleMuteClick);
 cameraBtn.addEventListener("click", handleCameraClick);
 camerasSelect.addEventListener("input", handleCameraChange);
 
-// Welcome Form (join a room)
-
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
+/**
+ * 방입장시 화상카메라 켜기
+ */
 async function initCall() {
   welcome.hidden = true;
   call.hidden = false;
@@ -110,45 +123,30 @@ async function initCall() {
   makeConnection();
 }
 
-// function handleWelcomeSubmit(event) {
-// event.preventDefault();
-// const input = welcomeForm.querySelector("input");
-// socket.emit("join_room", roomNum, startMedia);
-// roomName = input.value;
-// input.value = "";
-// }
-
-// welcomeForm.addEventListener("submit", handleWelcomeSubmit);
-
-// Socket Code
-
 socket.on("welcome", async () => {
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
-  console.log("sent the offer");
   socket.emit("offer", offer, roomNum);
 });
 
 socket.on("offer", async (offer) => {
-  console.log("received the offer");
-  console.log(offer);
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
   myPeerConnection.setLocalDescription(answer);
   socket.emit("answer", answer, roomNum);
-  console.log("sent the answer");
 });
 
 socket.on("answer", (answer) => {
-  console.log("received the answer");
   myPeerConnection.setRemoteDescription(answer);
 });
 
 socket.on("ice", (ice) => {
-  console.log("received candidate");
   myPeerConnection.addIceCandidate(ice);
 });
 
+/**
+ * 커넥션연결
+ */
 function makeConnection() {
   myPeerConnection = new RTCPeerConnection({
     iceServers: [
@@ -169,7 +167,6 @@ function makeConnection() {
 }
 
 function handleIce(data) {
-  console.log("sent candidate");
   socket.emit("ice", data.candidate, roomNum);
 }
 
